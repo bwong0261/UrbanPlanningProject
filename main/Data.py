@@ -1,93 +1,12 @@
-# import pandas as pd
-# from selenium import webdriver
-# from selenium.webdriver.common.by import By
 import requests
 import certifi
 import pandas as pd
+import matplotlib.pyplot as plt
 from io import StringIO
-
-# Initialize WebDriver
-
-# def setup_driver(url):
-#     options = webdriver.ChromeOptions()
-#     options.add_argument("--headless")  # Run in background
-#     driver = webdriver.Chrome(options = options)
-#     # Open the webpage
-#     driver.get(url)
-#
-#     return driver
-#
-#
-# def remove_parentheses(text):
-#     for i in range(len(text)):
-#         if text[i] == "(":
-#             text = text[:i - 1].strip()
-#             break
-#     return text
-#
-# def get_cities_and_pop(driver):
-#     # Find rows that have an 'id' attribute
-#     rows = driver.find_elements(By.XPATH, "//tbody/tr[@id]")
-#     data = []
-#     for row in rows:
-#         # City name from <tr id="Tokyo">, for example
-#         city_name = row.get_attribute("id")
-#
-#         # Attempt to grab the first <td style="text-align:right"> in that row
-#         # This is typically the population cell
-#         population_cells = row.find_elements(By.XPATH, ".//td[@style='text-align:right']")
-#
-#         if population_cells:
-#             population = population_cells[0].text
-#         else:
-#             population = None
-#
-#         data.append([city_name, population])
-#
-#     return data
-#
-# def get_cities_and_gdp(driver):
-#     table_ = driver.find_element(By.XPATH, "//table[contains(@class, 'static-row-numbers sortable wikitable jquery-tablesorter')]")
-#     rows = table_.find_elements(By.TAG_NAME, "tr")
-#     data = []
-#     for row in rows[1:]:
-#         cells = row.find_elements(By.TAG_NAME, "td")
-#         # Make sure the row has enough cells to extract
-#         if len(cells) >= 3:
-#             # 1st cell:  City name
-#             city_name = cells[0].text.strip()
-#             # 3rd cell: GDP
-#             gdp = cells[2].text.strip()
-#             gdp = remove_parentheses(gdp)
-#             data.append([city_name, gdp])
-#     return data
-#
-#
-# def turn_to_csv(column, name, name_2, file_name):
-#     df = pd.DataFrame(column, columns =[name, name_2])
-#     df.to_csv(file_name, index=False ,encoding='utf-8')
-#     return df
-
-# def main():
-#     driver_cap = setup_driver("https://en.wikipedia.org/wiki/List_of_largest_cities")
-#     cities_and_pop = get_cities_and_pop(driver_cap)
-#     df = turn_to_csv(cities_and_pop, "City Name", "Population", "Cities_and_Population.csv")
-#     driver_cap.quit()
-#
-#     driver_cag = setup_driver("https://en.wikipedia.org/wiki/List_of_cities_by_GDP")
-#     cities_and_gdp = get_cities_and_gdp(driver_cag)
-#     df = turn_to_csv(cities_and_gdp, "City Name", "GDP", "Cities_and_GDP.csv")
-#     driver_cag.quit()
-#
-# if __name__ == "__main__":
-#     main()
-
-
-# Now parse the HTML with pandas
 
 def remove_parentheses(text):
     for i in range(len(text)):
-        if text[i] == "(":
+        if text[i] == "(" or text[i] == "[":
             text = text[:i - 1].strip()
             break
     return text
@@ -106,6 +25,29 @@ def remove_metropolitan(text):
             text[i + 2] == "t" and
             text[i + 3] == "r" and
             text[i + 4] == 'o'):
+                text = text[:i].strip()
+                break
+    return text
+
+def remove_greater(text):
+    for i in range(len(text) - 6):
+        if (text[i] == "G" and
+            text[i + 1] == "r" and
+            text[i + 2] == "e" and
+            text[i + 3] == "a" and
+            text[i + 4] == "t" and
+            text[i + 5] == "e" and
+            text[i + 6] == "r"):
+                text = text[i + 7:].strip()
+                break
+    return text
+
+def remove_area(text):
+    for i in range(len(text) - 3):
+        if (text[i].lower() == "a" and
+            text[i + 1] == "r" and
+            text[i + 2] == "e" and
+            text[i + 3] == "a"):
                 text = text[:i].strip()
                 break
     return text
@@ -144,6 +86,7 @@ def main():
         "City proper[c] Population": "Population",
         "City proper[c] Density (/km2)" : "Density (/km2)"
     })
+    renamed_df_pop['Density (/km2)'] = renamed_df_pop['Density (/km2)'].apply(remove_parentheses)
 
 
     df_gdp = get_table("https://en.wikipedia.org/wiki/List_of_cities_by_GDP", 2)
@@ -154,10 +97,12 @@ def main():
     renamed_df_gdp['GDP (billion US$)'] = renamed_df_gdp['GDP (billion US$)'].apply(remove_parentheses)
     renamed_df_gdp['City'] = renamed_df_gdp['City'].apply(remove_metropolitan)
     renamed_df_gdp['City'] = renamed_df_gdp['City'].apply(remove_comma)
+    renamed_df_gdp['City'] = renamed_df_gdp['City'].apply(remove_greater)
+    renamed_df_gdp['City'] = renamed_df_gdp['City'].apply(remove_area)
 
     merged_df = pd.merge(renamed_df_pop, renamed_df_gdp, on = 'City', how = 'inner')
+    turn_to_csv(merged_df, "cities_and_gdp_and_pop.csv")
     print(merged_df.head())
-
 
 
 if __name__ == "__main__":
