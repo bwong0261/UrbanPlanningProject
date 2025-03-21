@@ -20,17 +20,17 @@ def remove_parentheses(text):
             break
     return text
 
-data = []
-for row in rows[1:]:
-    cells = row.find_elements(By.TAG_NAME, "td")
-    # Make sure the row has enough cells to extract
-    if len(cells) >= 3:
-        # 1st cell:  City name
-        city_name = cells[0].text.strip()
-        # 3rd cell: GDP
-        gdp = cells[2].text.strip()
-        gdp = remove_parentheses(gdp)
-        data.append([city_name, gdp])
+# data = []
+# for row in rows[1:]:
+#     cells = row.find_elements(By.TAG_NAME, "td")
+#     # Make sure the row has enough cells to extract
+#     if len(cells) >= 3:
+#         # 1st cell:  City name
+#         city_name = cells[0].text.strip()
+#         # 3rd cell: GDP
+#         gdp = cells[2].text.strip()
+#         gdp = remove_parentheses(gdp)
+#         data.append([city_name, gdp])
 
 
 
