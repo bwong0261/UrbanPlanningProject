@@ -107,9 +107,17 @@ def turn_to_csv(df, file_name):
 def main():
     df_pop = get_table("https://en.wikipedia.org/wiki/List_of_largest_cities", 1)
     turn_to_csv(df_pop, "cities_and_population.csv")
+    selected_df_pop = df_pop[[('City[a]', 'City[a]'),
+                   ('City proper[c]', 'Population'),
+                   ('City proper[c]', 'Density (/km2)')]]
 
     df_gdp = get_table("https://en.wikipedia.org/wiki/List_of_cities_by_GDP", 2)
     turn_to_csv(df_gdp, "cities_and_gdp.csv")
+    selected_df_gdp = df_gdp[['City proper/metropolitan area', 'Official est. GDP up to date (billion US$)']]
+    renamed_df_gdp = selected_df_gdp.rename(columns = {'City proper/metropolitan area' : 'City',
+                                                       'Official est. GDP up to date (billion US$)' : 'GDP (billion US$)'})
+    print(renamed_df_gdp.head())
+
 
 
 if __name__ == "__main__":
