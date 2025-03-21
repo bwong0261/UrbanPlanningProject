@@ -4,12 +4,11 @@ from selenium.webdriver.common.by import By
 
 # Initialize WebDriver
 
-def setup_driver():
+def setup_driver(url):
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")  # Run in background
     driver = webdriver.Chrome(options = options)
     # Open the webpage
-    url = "https://en.wikipedia.org/wiki/List_of_cities_proper_by_population"
     driver.get(url)
 
     return driver
@@ -38,15 +37,21 @@ def get_cities_and_pop(driver):
 
     return data
 
+def get_cities_and_gdp(driver):
+    table = driver.find_elements(By.XPATH, "//table[contains(@class, 'static-row-numbers sortable wikitable jquery-tablesorter')]")
+    rows = table.find(By.TAG_NAME, "tr")
+
 def turn_to_csv(column, name, name_2):
     df = pd.DataFrame(column, columns =[name, name_2])
-    df.to_csv("Cities_and_Pop.csv", index=False ,encoding='utf-8')
-    print(df)
+    df.to_csv("cities.csv", index=False ,encoding='utf-8')
+    return df
 
 def main():
-    driver = setup_driver()
+    driver = setup_driver("https://en.wikipedia.org/wiki/List_of_largest_cities")
     cities = get_cities_and_pop(driver)
-    turn_to_csv(cities, "City Name", "Population")
+    df = turn_to_csv(cities, "City Name", "Population")
+    print(df.head())
+
     driver.quit()
 
 if __name__ == "__main__":
